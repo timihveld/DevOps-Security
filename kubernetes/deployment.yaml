@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: student-devsecops
+  labels:
+    app: quoterxp
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: quoterxp
+  template:
+    metadata:
+      labels:
+        app: quoterxp
+    spec:
+      containers:
+      - name: quoterxp
+        image: hhmbroekman/student-app:latest
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 5000
+      imagePullSecrets:
+        - name: regcred
+         

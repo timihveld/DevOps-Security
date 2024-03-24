@@ -1,0 +1,244 @@
+html, body {
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  main {
+    height: 100%;
+  }
+  
+  * {
+    box-sizing: border-box;
+    font-family: arial;
+  }
+  
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    color: white;
+    z-index: 1;
+    transition: background-color 1s;
+    background-color: rgba(63,77,92,0);
+    padding: 8px 12px;
+  }
+  
+  body.scrolled header, input.fake:checked + header {
+    background-color: rgba(63,77,92,0.85);
+  }
+  
+  .modal {
+    position: fixed;
+    z-index: 2;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    
+    background-color: rgba(0,0,0,0.5);
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    transition: opacity 0.4s;
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  input.fake:checked + .modal {
+    opacity: 1;
+    pointer-events: inherit;
+  }
+  
+  .modal > form {
+    display: block;
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    width: 350px;
+  }
+  
+  .title {
+    display: flex;
+    align-items: center;
+  }
+  
+  .title > .home {
+    font-size: 135%;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  .title > .link {
+    color: inherit;
+    text-decoration: underline;
+    padding: 0 6px;
+  }
+  
+  .title > .link {
+    border-right: 1px solid white;
+    cursor: pointer;
+  }
+  .title > .link:last-child {
+    border-right: 0;
+  }
+  
+  
+  form > h3 {
+    margin: 0 0 3px 0;
+  }
+  
+  input.fake {
+    display: none;
+  }
+  
+  header > .modal {
+    text-align: right;
+    border-top: 1px solid white;
+    margin: 16px 0;
+  }
+  
+  header > .modal p {
+    margin-bottom: 4px;
+  }
+  
+  input[type="text"], input[type="password"], textarea, .comment > p {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: inherit;
+    margin: 0 0 16px 0;
+    color: inherit;
+    background-color: inherit;
+  }
+  
+  button, input[type="submit"], .button {
+    border: 0;
+    color: white;
+    font-size: 1.15rem;
+    background-color: #315fbb;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+  }
+  
+  textarea {
+    height: 5em;
+  }
+  
+  form .error {
+    color: #c12626;
+    margin-bottom: 16px;
+  }
+  
+  .quote {
+    background-position: center;
+    background-size: cover;
+    font-size: 5vw;
+    padding: 8% 4%;
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    text-decoration: none;
+    overflow: hidden;
+  }
+  .quote > address {
+    font-size: 50%;
+  }
+  
+  
+  .img0 {
+    background-image: url(https://cdn.glitch.com/2c3ff6b1-6ba9-4f7b-9054-82101e6a02d3%2Fchristopher-czermak-737894-unsplash.jpg.png?1531840610007);
+    color: black;
+    text-shadow: 0 0 4px white
+  }
+  .img1 {
+    background-image: url(https://cdn.glitch.com/2c3ff6b1-6ba9-4f7b-9054-82101e6a02d3%2Ftimothy-dykes-728642-unsplash.jpg.png?1531840607982);
+    color: white;
+  }
+  .img2 {
+    background-image: url(https://cdn.glitch.com/2c3ff6b1-6ba9-4f7b-9054-82101e6a02d3%2Fantonio-dicaterina-738197-unsplash.jpg.png?1531840608990);
+    color: white;
+    text-shadow: 0 2px 6px rgba(0,0,0,1)
+  }
+  .img4 {
+    background-image: url(https://cdn.glitch.com/2c3ff6b1-6ba9-4f7b-9054-82101e6a02d3%2Fgregory-hayes-737961-unsplash.jpg.png?1531840608935);
+    color: #ffebcb;
+  }
+  .img5 {
+    background-image: url(https://cdn.glitch.com/2c3ff6b1-6ba9-4f7b-9054-82101e6a02d3%2Fprateek-pisat-734986-unsplash.jpg.png?1531840607931);
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+  }
+  .img7 {
+    background-image: url(https://cdn.glitch.com/2c3ff6b1-6ba9-4f7b-9054-82101e6a02d3%2Fsora-sagano-739153-unsplash.jpg.png?1531840609036);
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+  }
+  .img8 {
+    background-image: url(https://cdn.glitch.com/2c3ff6b1-6ba9-4f7b-9054-82101e6a02d3%2Fkarina-vorozheeva-734804-unsplash.jpg.png?1531840609083);
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+    color: white;
+  }
+  .img10 {
+    background-image: url(https://cdn.glitch.com/2c3ff6b1-6ba9-4f7b-9054-82101e6a02d3%2Fcristian-palmer-733095-unsplash.jpg.png?1531840609699);
+    color: white;
+  }
+  .img11 {
+    background-image: url(https://cdn.glitch.com/2c3ff6b1-6ba9-4f7b-9054-82101e6a02d3%2Fasoggetti-737130-unsplash.jpg.png?1531840609748);
+    color: black;
+  }
+      
+  
+  .quote:nth-child(5n), .quote:nth-child(5n+2) {
+    background-attachment: fixed;
+  }
+  
+  .quote:nth-child(odd) {
+    text-align: right;
+  }
+  
+  
+  .comment {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    max-width: 750px;
+    margin: 3em auto 0 auto;
+  }
+  
+  .comment > aside {
+    width: 25%;
+    min-width: 75px;
+    margin-right: 1em;
+    color: #666;
+  
+  }
+  
+  .comment > p, .comment > textarea {
+    flex: 1;
+    margin: 0;
+  }
+  
+  .comment > input[type="submit"] {
+    margin-left: 8px;
+  }
+  
+  .comment time {
+    font-size: 75%;
+  }
+  
+  p.warn {
+    margin: 0 0 12px 0;
+    font-weight: bold;
+    font-size: 85%;
+    color: #c44;
+  }
