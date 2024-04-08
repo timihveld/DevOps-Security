@@ -1,6 +1,7 @@
 #!/bin/bash
 # common.sh
 # copy this script and run in all master and worker nodes
+# It has been tested on a AWS EC2 Ubuntu 22.04 LTS2
 #i1) Switch to root user [ sudo -i]
 
 #2) Disable swap & add kernel settings
