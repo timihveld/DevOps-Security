@@ -66,7 +66,7 @@ def page(content,user_id,title,error=None):
     return f"""<!DOCTYPE html>
 <html lang="en-US">
 <head>
-  <title>{title or "Quoter XP"}</title>
+  <title>{title or "DevOps Security"}</title>
   <meta charset="utf-8">
   <link rel="stylesheet" type="text/css" href="/static/style.css">
 </head>
@@ -75,7 +75,7 @@ def page(content,user_id,title,error=None):
 
 <header>
   <div class="title">
-    <a class="home" href="/">Quoter XP</a>
+    <a class="home" href="/">DevOps Security</a>
     {links}
   </div>
 </header>
