@@ -24,4 +24,8 @@ spec:
           - containerPort: 5000
       imagePullSecrets:
         - name: my-registry-secret
+      #resources:
+      #  limits:
+       #   cpu: "500m"
+        
          
