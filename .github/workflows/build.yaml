@@ -52,7 +52,7 @@ jobs:
 
   test:
     name: Test
-    needs: [ build ]
+    needs: [ scan ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
