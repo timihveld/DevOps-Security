@@ -78,7 +78,7 @@ def signin():
             user_id = cursor.lastrowid
     
     response = make_response(redirect('/'))
-    response.set_cookie('user_id', str(user_id))
+    response.set_cookie('user_id', str(user_id), secure=True, httponly=True, samesite='Lax')
     return response
 
 
