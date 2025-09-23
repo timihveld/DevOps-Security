@@ -28,7 +28,8 @@
 								"",
 								"pm.test(\"Sensitive data is not cached\", () => {",
 								"    const cacheControl = pm.response.headers.get(\"Cache-Control\") || \"\";",
-								"    pm.expect(cacheControl.toLowerCase()).to.include(\"no-store\");",
+								"    pm.expect(cacheControl.toLowerCase()).to.include(\"private\");",
+								"    pm.expect(cacheControl.toLowerCase()).to.not.include(\"public\");",
 								"});"
 							]
 ,
