@@ -55,7 +55,7 @@ def page(content,user_id,title,error=None):
 
     if user_id:
         links = f"""
-<label class="link" for="quoteCheckbox">Add a quote</label>
+<label class="link" for="quoteCheckbox">Add qa quote</label>
 <a class="link" href="/signout">Sign out</a>
 """
     else:
