@@ -15,21 +15,23 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"pm.test(\"Response time is less than 300ms\", () => {\r",
-							"    pm.expect(pm.response.responseTime).to.be.below(300);\r",
-							"});\r",
-							"pm.test(\"Tim test\", () => {\r",
-							"    pm.expect(pm.response.text()).to.include(\"Tim\");\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Sensitive data is not cached\", () => {\r",
-							"    const cacheControl = pm.response.headers.get(\"Cache-Control\");\r",
-							"    pm.expect(cacheControl).to.include(\"no-store\");\r",
-							"});"
-						],
+    							"pm.test(\"Status code is 200\", function () {",
+    							"    pm.response.to.have.status(200);",
+    							"});",
+  								"",
+    							"pm.test(\"Response time is less than 300ms\", () => {",
+    							"    pm.expect(pm.response.responseTime).to.be.below(300);",
+    							"});",
+								"pm.test(\"HTML response returned\", () => {",
+								"    pm.expect(pm.response.text()).to.include(\"<!DOCTYPE html>\");",
+								"});",
+								"",
+								"pm.test(\"Sensitive data is not cached\", () => {",
+								"    const cacheControl = pm.response.headers.get(\"Cache-Control\") || \"\";",
+								"    pm.expect(cacheControl.toLowerCase()).to.include(\"no-store\");",
+								"});"
+							]
+,
 						"type": "text/javascript",
 						"packages": {},
 						"requests": {}
