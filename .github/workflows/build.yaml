@@ -1,6 +1,3 @@
-backup build.yml
-
-
 name: CI/CD
 
 on: push
