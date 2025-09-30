@@ -32,8 +32,8 @@ jobs:
       - name: Login to Harbor
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.HARBOR_ADMIN_USERNAME }}
-          password: ${{ secrets.HARBOR_ADMIN_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Tag and push image to Harbor
         run: |
