@@ -39,7 +39,7 @@ jobs:
         
       - name: Tag and push image to Harbor
         run: |
-          docker push ec2-13-217-196-64.compute-1.amazonaws.com:8443/library/student-app:latest
+          docker push ec2-13-217-196-64.compute-1.amazonaws.com:8443/library/516886/student-app:latest
         
   scan:
     name: Scan
