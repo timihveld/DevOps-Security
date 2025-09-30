@@ -1,113 +1,35 @@
 name: CI/CD
 
-on: push
+on:
+  push:
 
 jobs:
-  
   build:
-    name: Build
+    name: Build and Push to Harbor
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Build and push the Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: |
-            516886/student-app:latest
-            
-      - name: Login to Harbor
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: Pull image from Docker Hub
-        run: docker pull 516886/student-app:latest
-        
-      - name: Tag and push image to Harbor
-        run: |
-          docker tag 516886/student-app:latest ec2-13-217-196-64.compute-1.amazonaws.com:8443/library/516886/student-app:latest
-          docker push ec2-13-217-196-64.compute-1.amazonaws.com:8443/library/516886/student-app:latest
-        
-  scan:
-    name: Scan
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-    - name: Docker Scout CVEs
-      uses: docker/scout-action@v1.5.0
-      with:
-          command: cves
-          image: 516886/student-app:latest
-          only-severities: critical,high
-          ignore-base: false
-          ignore-unchanged: false
-          write-comment: true
-          github-token: ${{ secrets.MY_GITHUB_TOKEN }}
-          #exit-code: true
-          #exit-on: vulnerability
-
-  test:
-    name: Test
-    needs: [ scan ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: test 
-        run: |
-          docker run -d -p 80:5000 516886/student-app:latest
-          sleep 10s
-          curl http://localhost
-          docker ps -aq | xargs docker stop | xargs docker rm
-
-  deploy:
-    name: Deploy
-    needs: [ test ]
-    runs-on: self-hosted
-    steps:
-      - name: Checkout source code
+      - name: Checkout Repository
         uses: actions/checkout@v4
-      - run: |
-              sudo kubectl delete deployment --all              
-              sudo kubectl apply -f ${{ github.workspace }}/kubernetes/deployment.yaml --force
-              sudo kubectl apply -f ${{ github.workspace }}/kubernetes/nginx-service.yaml --force
 
-  postman:
-      name: postman
-      needs: [deploy] 
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - name: Install Postman CLI
-          run: |
-            curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
-        - name: Login to Postman CLI
-          run: postman login --with-api-key ${{ secrets.POSTMAN_KEY }}
-        - name: Run API tests
-          run: |
-            postman collection run "${{ github.workspace }}/postman/collections/Integration Testing.json" --integration-id "181153-${{ github.run_id }}"
+      - name: Install Harbor CA Certificate
+        run: |
+          sudo mkdir -p /etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443
+          echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443/ca.crt
+          sudo systemctl restart docker
+
+      - name: Login to Harbor
+        run: echo "${{ secrets.HARBOR_PASSWORD }}" | docker login ${{ secrets.HARBOR_HOST }}:8443 -u ${{ secrets.HARBOR_USERNAME }} --password-stdin
+
+      - name: Build Docker Image
+        run: docker build -t student-app:latest .
+
+      - name: Tag Docker Image for Harbor
+        run: docker tag student-app:latest ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
+
+      - name: Push Docker Image to Harbor
+        run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
+
+      - name: Cleanup Local Docker Images
+        run: |
+          docker rmi student-app:latest || true
+          docker rmi ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest || true
