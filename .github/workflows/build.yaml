@@ -15,29 +15,30 @@ jobs:
           echo "HARBOR_HOST is: '${{ secrets.HARBOR_HOST }}'"
           echo "Length of HARBOR_CA_CERT is: $(echo "${{ secrets.HARBOR_CA_CERT }}" | wc -c)"
 
-      # ✅ Install Harbor CA certificate into system + Docker trust stores
-      - name: Install Harbor CA certificate (system + Docker)
+      # ✅ Install Harbor CA into system, Docker, and BuildKit trust stores
+      - name: Install Harbor CA certificate (system + Docker + BuildKit)
         run: |
-          # Write CA to system trust
+          # System trust store
           echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /usr/local/share/ca-certificates/harbor-ca.crt > /dev/null
           sudo update-ca-certificates
 
-          # Write CA to Docker trust store
+          # Docker trust store
           CERT_DIR="/etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443"
           sudo mkdir -p "$CERT_DIR"
           echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee "$CERT_DIR/ca.crt" > /dev/null
 
-          # 🔐 Merge CA into global bundle (for BuildKit trust)
+          # Merge into global bundle (helps BuildKit see it)
           cat "$CERT_DIR/ca.crt" | sudo tee -a /etc/ssl/certs/ca-certificates.crt > /dev/null
+          sudo cp /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/combined-ca.crt
 
-          # Restart Docker to reload trust
+          # Restart Docker to load trust changes
           sudo systemctl restart docker
 
-          # ✅ Debug: Show installed CA fingerprint
+          # 🔎 Debug: Verify installed CA fingerprint
           echo "🔎 Installed CA fingerprint on runner:"
           openssl x509 -noout -fingerprint -sha256 -in "$CERT_DIR/ca.crt"
 
-          # ✅ Verify TLS trust against Harbor
+          # 🔍 Verify TLS trust to Harbor
           echo "🔍 Verifying trust against Harbor..."
           openssl s_client -connect ${{ secrets.HARBOR_HOST }}:8443 -CAfile "$CERT_DIR/ca.crt" </dev/null | grep "Verify return code" || true
 
@@ -56,7 +57,8 @@ jobs:
           ls -l /etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443/
           head -n 5 /etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443/ca.crt
 
-      - name: Build and Push image to Harbor
+      # ✅ Use containerized BuildKit with CA trust exported
+      - name: Build and Push image to Harbor (containerized BuildKit)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -64,6 +66,14 @@ jobs:
           push: true
           tags: |
             ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
+          buildkitd-flags: --oci-worker-no-process-sandbox
+          driver-opts: |
+            image=moby/buildkit:latest
+          sbom: false
+          provenance: false
+        env:
+          SSL_CERT_FILE: /etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443/ca.crt
+          DOCKER_BUILDKIT: 1
 
   scan:
     name: Scan Image for CVEs
