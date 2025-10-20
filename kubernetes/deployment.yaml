@@ -22,10 +22,9 @@ spec:
         imagePullPolicy: Always
         ports:
           - containerPort: 5000
+        securityContext:              
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true           
+          readOnlyRootFilesystem: true 
       imagePullSecrets:
         - name: my-registry-secret
-      #resources:
-      #  limits:
-       #   cpu: "500m"
-        
-         
