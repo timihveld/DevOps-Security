@@ -52,8 +52,15 @@ jobs:
     steps:
       - name: Install Trivy (from GitHub release)
         run: |
-          wget -qO trivy.tar.gz https://github.com/aquasecurity/trivy/releases/latest/download/trivy_$(uname -s)_$(dpkg --print-architecture).tar.gz
-          sudo tar zxvf trivy.tar.gz -C /usr/local/bin trivy
+          LATEST_URL=$(curl -s https://api.github.com/repos/aquasecurity/trivy/releases/latest \
+            | grep "browser_download_url" \
+            | grep "Linux-64bit.tar.gz" \
+            | cut -d '"' -f 4)
+
+          echo "📦 Downloading Trivy from: $LATEST_URL"
+          wget -qO trivy.tar.gz "$LATEST_URL"
+          tar zxvf trivy.tar.gz
+          sudo mv trivy /usr/local/bin/
           trivy --version
 
       # ✅ Scan the image directly from Harbor
@@ -62,6 +69,18 @@ jobs:
           echo "🛡️ Scanning ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest"
           trivy image --severity CRITICAL,HIGH --ignore-unfixed --insecure \
           ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
+
+      # (Optional) Save scan results as an artifact
+      - name: Save scan report
+        run: |
+          trivy image --severity CRITICAL,HIGH --ignore-unfixed --insecure -f json -o trivy-report.json \
+          ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
+
+      - name: Upload scan report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.json
 
   test:
     name: Test Image
