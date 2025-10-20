@@ -24,7 +24,7 @@ spec:
           - containerPort: 5000
         securityContext:              
           allowPrivilegeEscalation: false
-          runAsNonRoot: true           
-          readOnlyRootFilesystem: true 
+          runAsNonRoot: false         
+          readOnlyRootFilesystem: false
       imagePullSecrets:
         - name: my-registry-secret
