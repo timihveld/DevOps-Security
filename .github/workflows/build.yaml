@@ -43,10 +43,11 @@ jobs:
       - name: Pull image from Docker Hub
         run: docker pull 516886/student-app:latest
         
-      #- name: Tag and push image to Harbor
-      #  run: |
-       #   docker tag 516886/student-app:latest ec2-13-217-196-64.compute-1.amazonaws.com:8443/library/516886/student-app:latest
-        #  docker push ec2-13-217-196-64.compute-1.amazonaws.com:8443/library/516886/student-app:latest
+      - name: Tag and push image to Harbor
+        run: |
+          docker tag 516886/student-app:latest ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
+          docker push ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
+
         
   scan:
     name: Scan
