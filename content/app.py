@@ -1,90 +1,136 @@
-from flask import Flask, request, redirect, make_response
+from flask import Flask, request, redirect, make_response, render_template_string
 import sqlite3
 import urllib
+from markupsafe import escape
 import quoter_templates as templates
 
-# Run using `poetry install && poetry run flask run --reload`
 app = Flask(__name__)
 app.static_folder = '.'
 
-# Open the database. Have queries return dicts instead of tuples.
-# The use of `check_same_thread` can cause unexpected results in rare cases. We'll
-# get rid of this when we learn about SQLAlchemy.
+# Open de database – queries geven dicts terug
 db = sqlite3.connect("db.sqlite3", check_same_thread=False)
 db.row_factory = sqlite3.Row
 
-# Log all requests for analytics purposes
+# Log alle requests
 log_file = open('access.log', 'a', buffering=1)
+
 @app.before_request
 def log_request():
     log_file.write(f"{request.method} {request.path} {dict(request.form) if request.form else ''}\n")
 
-
-# Set user_id on request if user is logged in, or else set it to None.
+# Controleer of gebruiker is ingelogd
 @app.before_request
 def check_authentication():
     if 'user_id' in request.cookies:
-        request.user_id = int(request.cookies['user_id'])
+        try:
+            request.user_id = int(request.cookies['user_id'])
+        except ValueError:
+            request.user_id = None
     else:
         request.user_id = None
 
 
-# The main page
+# 📄 Hoofdpagina
 @app.route("/")
 def index():
-    quotes = db.execute("select id, text, attribution from quotes order by id").fetchall()
-    return templates.main_page(quotes, request.user_id, request.args.get('error'))
+    quotes = db.execute(
+        "SELECT id, text, attribution FROM quotes ORDER BY id"
+    ).fetchall()
+    error = escape(request.args.get("error", ""))  # ✅ XSS fix
+    return templates.main_page(quotes, request.user_id, error)
 
 
-# The quote comments page
+# 💬 Quote comments pagina
 @app.route("/quotes/<int:quote_id>")
 def get_comments_page(quote_id):
-    quote = db.execute(f"select id, text, attribution from quotes where id={quote_id}").fetchone()
-    comments = db.execute(f"select text, datetime(time,'localtime') as time, name as user_name from comments c left join users u on u.id=c.user_id where quote_id={quote_id} order by c.id").fetchall()
+    quote = db.execute(
+        "SELECT id, text, attribution FROM quotes WHERE id = ?", (quote_id,)
+    ).fetchone()
+
+    if not quote:
+        return "Quote not found", 404
+
+    comments = db.execute(
+        """
+        SELECT text, datetime(time,'localtime') AS time, name AS user_name
+        FROM comments c
+        LEFT JOIN users u ON u.id = c.user_id
+        WHERE quote_id = ?
+        ORDER BY c.id
+        """,
+        (quote_id,),
+    ).fetchall()
+
     return templates.comments_page(quote, comments, request.user_id)
 
 
-# Post a new quote
+# ✍️ Nieuwe quote plaatsen
 @app.route("/quotes", methods=["POST"])
 def post_quote():
+    text = escape(request.form.get("text", ""))  # ✅ ontsmet input
+    attribution = escape(request.form.get("attribution", ""))
+
     with db:
-        db.execute(f"""insert into quotes(text,attribution) values("{request.form['text']}","{request.form['attribution']}")""")
+        db.execute(
+            "INSERT INTO quotes (text, attribution) VALUES (?, ?)",
+            (text, attribution),
+        )
     return redirect("/#bottom")
 
 
-# Post a new comment
+# 💭 Nieuwe comment plaatsen
 @app.route("/quotes/<int:quote_id>/comments", methods=["POST"])
 def post_comment(quote_id):
+    if request.user_id is None:
+        return redirect(f"/quotes/{quote_id}?error=" + urllib.parse.quote("Login required"))
+
+    text = escape(request.form.get("text", ""))  # ✅ ontsmet input
+
     with db:
-        db.execute(f"""insert into comments(text,quote_id,user_id) values("{request.form['text']}",{quote_id},{request.user_id})""")
+        db.execute(
+            "INSERT INTO comments (text, quote_id, user_id) VALUES (?, ?, ?)",
+            (text, quote_id, request.user_id),
+        )
     return redirect(f"/quotes/{quote_id}#bottom")
 
 
-# Sign in user
+# 🔐 Inloggen of registreren
 @app.route("/signin", methods=["POST"])
 def signin():
-    username = request.form["username"].lower()
-    password = request.form["password"]
+    username = request.form.get("username", "").lower()
+    password = request.form.get("password", "")
 
-    user = db.execute(f"select id, password from users where name='{username}'").fetchone()
-    if user: # user exists
-        if password != user['password']:
-            # wrong! redirect to main page with an error message
-            return redirect('/?error='+urllib.parse.quote("Invalid password!"))
-        user_id = user['id']
-    else: # new sign up
+    user = db.execute(
+        "SELECT id, password FROM users WHERE name = ?", (username,)
+    ).fetchone()
+
+    if user:
+        if password != user["password"]:
+            return redirect("/?error=" + urllib.parse.quote("Invalid password!"))
+        user_id = user["id"]
+    else:
         with db:
-            cursor = db.execute(f"insert into users(name,password) values('{username}', '{password}')")
+            cursor = db.execute(
+                "INSERT INTO users (name, password) VALUES (?, ?)",
+                (username, password),
+            )
             user_id = cursor.lastrowid
-    
-    response = make_response(redirect('/'))
-    response.set_cookie('user_id', str(user_id), secure=True, httponly=True, samesite='Lax')
+
+    response = make_response(redirect("/"))
+    response.set_cookie(
+        "user_id",
+        str(user_id),
+        secure=True,
+        httponly=True,
+        samesite="Lax",
+        max_age=60 * 60 * 24 * 7,  # 7 dagen geldig
+    )
     return response
 
 
-# Sign out user
+# 🚪 Uitloggen
 @app.route("/signout", methods=["GET"])
 def signout():
-    response = make_response(redirect('/'))
-    response.delete_cookie('user_id')
+    response = make_response(redirect("/"))
+    response.delete_cookie("user_id")
     return response
