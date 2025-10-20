@@ -46,23 +46,23 @@ jobs:
       - name: Push image to Harbor
         run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
 
-    scan:
-    name: Scan Image for CVEs
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Docker Scout CVEs
-        uses: docker/scout-action@v1.5.0
-        with:
-          command: cves
-          image: ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
-          only-severities: critical,high
-          ignore-base: false
-          ignore-unchanged: false
-          write-comment: true
-          github-token: ${{ secrets.MY_GITHUB_TOKEN }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+  scan:
+   name: Scan Image for CVEs
+   needs: [build]
+   runs-on: ubuntu-latest
+   steps:
+     - name: Docker Scout CVEs
+       uses: docker/scout-action@v1.5.0
+       with:
+         command: cves
+         image: ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
+         only-severities: critical,high
+         ignore-base: false
+         ignore-unchanged: false
+         write-comment: true
+         github-token: ${{ secrets.MY_GITHUB_TOKEN }}
+         username: ${{ secrets.DOCKERHUB_USERNAME }}
+         password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
 
   test:
