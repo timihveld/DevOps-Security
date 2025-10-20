@@ -25,7 +25,6 @@ jobs:
           sudo mkdir -p "$CERT_DIR"
           echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee "$CERT_DIR/ca.crt" > /dev/null
 
-          # Debug check fingerprint
           echo "🔎 Installed CA fingerprint:"
           openssl x509 -noout -fingerprint -sha256 -in "$CERT_DIR/ca.crt"
 
@@ -38,32 +37,34 @@ jobs:
           username: ${{ secrets.HARBOR_ADMIN_USERNAME }}
           password: ${{ secrets.HARBOR_ADMIN_PASSWORD }}
 
-      # ✅ Build image locally with Buildx but do NOT push (avoids TLS bug)
+      # ✅ Build image locally with Buildx but do NOT push
       - name: Build image with Buildx (load into Docker)
         run: docker buildx build --load -t ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest .
 
-      # ✅ Push the image using classic Docker (respects /etc/docker/certs.d)
+      # ✅ Push the image using classic Docker
       - name: Push image to Harbor
         run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
 
   scan:
-   name: Scan Image for CVEs
-   needs: [build]
-   runs-on: ubuntu-latest
-   steps:
-     - name: Docker Scout CVEs
-       uses: docker/scout-action@v1.5.0
-       with:
-         command: cves
-         image: ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
-         only-severities: critical,high
-         ignore-base: false
-         ignore-unchanged: false
-         write-comment: true
-         github-token: ${{ secrets.MY_GITHUB_TOKEN }}
-         username: ${{ secrets.DOCKERHUB_USERNAME }}
-         password: ${{ secrets.DOCKERHUB_PASSWORD }}
+    name: Scan Image with Trivy
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Trivy
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb stable main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update -y
+          sudo apt-get install -y trivy
 
+      # ✅ Scan the image directly from Harbor
+      - name: Scan image with Trivy
+        run: |
+          echo "🛡️ Scanning ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest"
+          trivy image --severity CRITICAL,HIGH --ignore-unfixed --insecure \
+          ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
 
   test:
     name: Test Image
