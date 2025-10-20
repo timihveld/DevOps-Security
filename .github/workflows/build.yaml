@@ -46,7 +46,7 @@ jobs:
       - name: Push image to Harbor
         run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
 
-  scan:
+    scan:
     name: Scan Image for CVEs
     needs: [build]
     runs-on: ubuntu-latest
@@ -61,6 +61,9 @@ jobs:
           ignore-unchanged: false
           write-comment: true
           github-token: ${{ secrets.MY_GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
 
   test:
     name: Test Image
