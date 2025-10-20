@@ -77,7 +77,7 @@ jobs:
           write-comment: true
           github-token: ${{ secrets.MY_GITHUB_TOKEN }}
           #exit-code: truee
-          #exit-on: vulnerability
+          #exit-on: vulnerabilitye
 
   test:
     name: Test
