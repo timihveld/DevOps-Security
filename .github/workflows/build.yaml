@@ -10,12 +10,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Debug Harbor secrets (optional, remove later)
+      - name: Debug Harbor secrets
         run: |
           echo "HARBOR_HOST is: '${{ secrets.HARBOR_HOST }}'"
-          echo "Length of HARBOR_CA_CERT is: $(echo "${{ secrets.HARBOR_CA_CERT }}" | wc -c)"
+          echo "CA length: $(echo "${{ secrets.HARBOR_CA_CERT }}" | wc -c)"
 
-      # ✅ Install Harbor CA into system & Docker trust stores
       - name: Install Harbor CA certificate
         run: |
           echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /usr/local/share/ca-certificates/harbor-ca.crt > /dev/null
@@ -25,9 +24,8 @@ jobs:
           sudo mkdir -p "$CERT_DIR"
           echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee "$CERT_DIR/ca.crt" > /dev/null
 
-          echo "🔎 Installed CA fingerprint:"
+          echo "Installed CA fingerprint:"
           openssl x509 -noout -fingerprint -sha256 -in "$CERT_DIR/ca.crt"
-
           sudo systemctl restart docker
 
       - name: Login to Harbor
@@ -37,50 +35,11 @@ jobs:
           username: ${{ secrets.HARBOR_ADMIN_USERNAME }}
           password: ${{ secrets.HARBOR_ADMIN_PASSWORD }}
 
-      # ✅ Build image locally with Buildx but do NOT push (avoids TLS bug)
-      - name: Build image with Buildx (load into Docker)
+      - name: Build image (load locally)
         run: docker buildx build --load -t ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest .
 
-      # ✅ Push the image using classic Docker (respects CA trust)
       - name: Push image to Harbor
         run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
-
-  #scan:#
-    #name: Scan Image with Trivy
-    #needs: [build]##
-    #runs-on: ubuntu-latest
-    #steps:
-     # - name: Install Trivy (from GitHub release)
-      #  run: |
-       #   LATEST_URL=$(curl -s https://api.github.com/repos/aquasecurity/trivy/releases/latest \
-        #    | grep "browser_download_url" \
-         #   | grep "Linux-64bit.tar.gz" \
-          #  | cut -d '"' -f 4)
-
-          #echo "📦 Downloading Trivy from: $LATEST_URL"
-          #wget -qO trivy.tar.gz "$LATEST_URL"
-          #tar zxvf trivy.tar.gz
-          #sudo mv trivy /usr/local/bin/
-          #trivy --version
-
-      # ✅ Scan the image directly from Harbor
-      #- name: Scan image with Trivy
-       # run: |
-        #  echo "🛡️ Scanning ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest"
-         # trivy image --severity CRITICAL,HIGH --ignore-unfixed --insecure \
-          #${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
-
-      # (Optional) Save scan results as an artifact
-      #- name: Save scan report
-       # run: |
-        #  trivy image --severity CRITICAL,HIGH --ignore-unfixed --insecure -f json -o trivy-report.json \
-         # ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
-
-      #- name: Upload scan report
-       # uses: actions/upload-artifact@v4
-        #with:
-         # name: trivy-report
-          #path: trivy-report.json
 
   test:
     name: Test Image
