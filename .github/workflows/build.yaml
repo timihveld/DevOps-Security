@@ -17,16 +17,23 @@ jobs:
 
       - name: Install Harbor CA certificate
         run: |
+          echo " Installing Harbor CA cert..."
+          
+          # System-wide trust (for curl and most tools)
           echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /usr/local/share/ca-certificates/harbor-ca.crt > /dev/null
           sudo update-ca-certificates
 
+          # Docker trust (for registry access)
           CERT_DIR="/etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443"
-          sudo mkdir -p "$CERT_DIR"
+          sudo mkdir -p "$CERT_DIWR"
           echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee "$CERT_DIR/ca.crt" > /dev/null
 
-          echo "Installed CA fingerprint:"
-          openssl x509 -noout -fingerprint -sha256 -in "$CERT_DIR/ca.crt"
+          echo " CA installed at $CERT_DIR/ca.crt"
           sudo systemctl restart docker
+
+          echo " CA fingerprint:"
+          openssl x509 -noout -fingerprint -sha256 -in "$CERT_DIR/ca.crt"
+
 
       - name: Login to Harbor
         uses: docker/login-action@v2
