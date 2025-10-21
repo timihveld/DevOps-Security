@@ -47,7 +47,7 @@ jobs:
 
   #scan:#
     #name: Scan Image with Trivy
-    #needs: [build]
+    #needs: [build]#
     #runs-on: ubuntu-latest
     #steps:
      # - name: Install Trivy (from GitHub release)
