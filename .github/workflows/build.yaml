@@ -84,7 +84,7 @@ jobs:
 
   test:
     name: Test Image
-    needs: [scan]
+    #needs: [scan]
     runs-on: ubuntu-latest
     steps:
       - name: Run container from Harbor image
