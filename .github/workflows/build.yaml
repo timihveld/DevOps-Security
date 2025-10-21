@@ -17,23 +17,16 @@ jobs:
 
       - name: Install Harbor CA certificate
         run: |
-          echo " Installing Harbor CA cert..."
-          
-          # System-wide trust (for curl and most tools)
           echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /usr/local/share/ca-certificates/harbor-ca.crt > /dev/null
           sudo update-ca-certificates
 
-          # Docker trust (for registry access)
           CERT_DIR="/etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443"
-          sudo mkdir -p "$CERT_DIWR"
+          sudo mkdir -p "$CERT_DIR"
           echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee "$CERT_DIR/ca.crt" > /dev/null
 
-          echo " CA installed at $CERT_DIR/ca.crt"
-          sudo systemctl restart docker
-
-          echo " CA fingerprint:"
+          echo "Installed CA fingerprint:"
           openssl x509 -noout -fingerprint -sha256 -in "$CERT_DIR/ca.crt"
-
+          sudo systemctl restart docker
 
       - name: Login to Harbor
         uses: docker/login-action@v2
@@ -48,17 +41,36 @@ jobs:
       - name: Push image to Harbor
         run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
 
-  test:
+    test:
     name: Test Image
     needs: [build]
     runs-on: ubuntu-latest
     steps:
+      - name: Install Harbor CA certificate
+        run: |
+          echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /usr/local/share/ca-certificates/harbor-ca.crt > /dev/null
+          sudo update-ca-certificates
+
+          CERT_DIR="/etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443"
+          sudo mkdir -p "$CERT_DIR"
+          echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee "$CERT_DIR/ca.crt" > /dev/null
+          sudo systemctl restart docker
+
+      - name: Login to Harbor
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.HARBOR_HOST }}:8443
+          username: ${{ secrets.HARBOR_ADMIN_USERNAME }}
+          password: ${{ secrets.HARBOR_ADMIN_PASSWORD }}
+
       - name: Run container from Harbor image
         run: |
+          docker pull ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
           docker run -d -p 80:5000 ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
           sleep 10
           curl -f http://localhost
           docker ps -aq | xargs docker stop | xargs docker rm
+
 
   deploy:
     name: Deploy to Kubernetes
