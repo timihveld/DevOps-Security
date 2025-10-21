@@ -48,11 +48,11 @@ jobs:
       #- name: Push image to Harbor
        # run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest
 
-  test:
-    name: Test
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
+ # test:
+  #  name: Test
+   # needs: [build]
+   # runs-on: ubuntu-latest
+    #steps:
       #- name: Install Harbor CA certificate
        # run: |
         #  echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /usr/local/share/ca-certificates/harbor-ca.crt > /dev/null
