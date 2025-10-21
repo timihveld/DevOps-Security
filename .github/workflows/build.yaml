@@ -4,7 +4,7 @@ on: push
 
 jobs:
   build:
-    name: Build and Push to Harbor
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -36,13 +36,13 @@ jobs:
           password: ${{ secrets.HARBOR_ADMIN_PASSWORD }}
 
       - name: Build image (load locally)
-        run: docker buildx build --load -t ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest .
+        run: docker buildx build --load -t ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest .
 
       - name: Push image to Harbor
-        run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
+        run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest
 
   test:
-    name: Test Image
+    name: Test
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -65,15 +65,15 @@ jobs:
 
       - name: Run container from Harbor image
         run: |
-          docker pull ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
-          docker run -d -p 80:5000 ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
+          docker pull ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest
+          docker run -d -p 80:5000 ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest
           sleep 10
           curl -f http://localhost
           docker ps -aq | xargs docker stop | xargs docker rm
 
 
   deploy:
-    name: Deploy to Kubernetes
+    name: Deploy
     needs: [test]
     runs-on: self-hosted
     steps:
@@ -86,7 +86,7 @@ jobs:
           sudo kubectl apply -f ${{ github.workspace }}/kubernetes/nginx-service.yaml --force
 ###
   postman:
-    name: API Tests
+    name: Postman
     needs: [deploy]
     runs-on: ubuntu-latest
     steps:
