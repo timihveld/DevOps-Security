@@ -15,18 +15,18 @@ jobs:
           echo "HARBOR_HOST is: '${{ secrets.HARBOR_HOST }}'"
           echo "CA length: $(echo "${{ secrets.HARBOR_CA_CERT }}" | wc -c)"
 
-      - name: Install Harbor CA certificate
-        run: |
-          echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /usr/local/share/ca-certificates/harbor-ca.crt > /dev/null
-          sudo update-ca-certificates
+      #- name: Install Harbor CA certificate
+      #  run: |
+      #    echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /usr/local/share/ca-certificates/harbor-ca.crt > /dev/null
+       #   sudo update-ca-certificates
 
-          CERT_DIR="/etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443"
-          sudo mkdir -p "$CERT_DIR"
-          echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee "$CERT_DIR/ca.crt" > /dev/null
+        #  CERT_DIR="/etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443"
+         # sudo mkdir -p "$CERT_DIR"
+          #echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee "$CERT_DIR/ca.crt" > /dev/null
 
-          echo "Installed CA fingerprint:"
-          openssl x509 -noout -fingerprint -sha256 -in "$CERT_DIR/ca.crt"
-          sudo systemctl restart docker
+          #echo "Installed CA fingerprint:"
+          #openssl x509 -noout -fingerprint -sha256 -in "$CERT_DIR/ca.crt"
+          #sudo systemctl restart docker
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -35,48 +35,48 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
 #
-      - name: Login to Harbor
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ secrets.HARBOR_HOST }}:8443
-          username: ${{ secrets.HARBOR_ADMIN_USERNAME }}
-          password: ${{ secrets.HARBOR_ADMIN_PASSWORD }}
+      #- name: Login to Harbor
+       # uses: docker/login-action@v2
+        #with:
+         # registry: ${{ secrets.HARBOR_HOST }}:8443
+          #username: ${{ secrets.HARBOR_ADMIN_USERNAME }}
+          #password: ${{ secrets.HARBOR_ADMIN_PASSWORD }}
 
       - name: Build image (load locally)
         run: docker buildx build --load -t ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest .
 
-      - name: Push image to Harbor
-        run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest
+      #- name: Push image to Harbor
+       # run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest
 
   test:
     name: Test
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-      - name: Install Harbor CA certificate
-        run: |
-          echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /usr/local/share/ca-certificates/harbor-ca.crt > /dev/null
-          sudo update-ca-certificates
+      #- name: Install Harbor CA certificate
+       # run: |
+        #  echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee /usr/local/share/ca-certificates/harbor-ca.crt > /dev/null
+         # sudo update-ca-certificates
 
-          CERT_DIR="/etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443"
-          sudo mkdir -p "$CERT_DIR"
-          echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee "$CERT_DIR/ca.crt" > /dev/null
-          sudo systemctl restart docker
+          #CERT_DIR="/etc/docker/certs.d/${{ secrets.HARBOR_HOST }}:8443"
+          #sudo mkdir -p "$CERT_DIR"
+          #echo "${{ secrets.HARBOR_CA_CERT }}" | sudo tee "$CERT_DIR/ca.crt" > /dev/null
+          #sudo systemctl restart docker
 
-      - name: Login to Harbor
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ secrets.HARBOR_HOST }}:8443
-          username: ${{ secrets.HARBOR_ADMIN_USERNAME }}
-          password: ${{ secrets.HARBOR_ADMIN_PASSWORD }}
+     # - name: Login to Harbor
+      #  uses: docker/login-action@v2
+       # with:
+        #  registry: ${{ secrets.HARBOR_HOST }}:8443
+         # username: ${{ secrets.HARBOR_ADMIN_USERNAME }}
+          #password: ${{ secrets.HARBOR_ADMIN_PASSWORD }}
 
-      - name: Run container from Harbor image
-        run: |
-          docker pull ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest
-          docker run -d -p 80:5000 ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest
-          sleep 10
-          curl -f http://localhost
-          docker ps -aq | xargs docker stop | xargs docker rm
+   #   - name: Run container from Harbor image
+    #    run: |
+     #     docker pull ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest
+      #    docker run -d -p 80:5000 ${{ secrets.HARBOR_HOST }}:8443/library/516886/student-app:latest
+       #   sleep 10
+        #  curl -f http://localhost
+         # docker ps -aq | xargs docker stop | xargs docker rm
 
 
   deploy:
