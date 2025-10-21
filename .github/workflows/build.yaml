@@ -41,7 +41,7 @@ jobs:
       - name: Push image to Harbor
         run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
 
-    test:
+  test:
     name: Test Image
     needs: [build]
     runs-on: ubuntu-latest
