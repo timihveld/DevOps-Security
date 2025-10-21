@@ -45,7 +45,7 @@ jobs:
       - name: Push image to Harbor
         run: docker push ${{ secrets.HARBOR_HOST }}:8443/library/student-app:latest
 
-  #scan:
+  #scan:#
     #name: Scan Image with Trivy
     #needs: [build]
     #runs-on: ubuntu-latest
